@@ -1,0 +1,6 @@
+Комментарий к задаче &laquo;{{comment.task.title}}&raquo;:<br /><br />
+
+{{comment.content|safe}}
+<b>{{comment.author.get_full_name|default:comment.author}}</b>, {{comment.created_at|date}}<br /><br />
+
+<a href="http://{{host}}{% url 'task_detail' comment.task.id %}#comments">http://{{host}}{% url 'task_detail' comment.task.id %}#commentContainer</a>

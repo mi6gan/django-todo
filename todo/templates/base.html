@@ -1,0 +1,64 @@
+{% load compress todo_extras static %}
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml">
+<head>
+<meta http-equiv="Content-type" content="text/html; charset=utf-8" />
+<meta http-equiv="Content-Language" content="ru" />
+<title>{% block title %}{% endblock %} | opentodo</title>
+<link rel="icon" href="{{STATIC_URL}}favicon.png" type="image/x-icon" />
+{% block extra_media %}{% endblock %}
+<style type="text/css">#shadow {background:transparent url('{{STATIC_URL}}img/bg.gif') repeat-x scroll 0 0; height:50px;}</style>
+{% block extra_head %}{% endblock %}
+{% compress css %}
+	<link type="text/less" rel="stylesheet" href="{{STATIC_URL}}bootstrap-3.2.0/less/bootstrap.less" >
+	<link type="text/less" rel="stylesheet" href="{{STATIC_URL}}less/todo.less" >
+{% endcompress %}
+<script type="text/javascript" src="{{STATIC_URL}}js/jquery.min.js"></script>
+<script type="text/javascript" src="{{STATIC_URL}}bootstrap-3.2.0/js/transition.js"></script>
+<script type="text/javascript" src="{{STATIC_URL}}bootstrap-3.2.0/js/collapse.js"></script>
+<script type="text/javascript" src="{{STATIC_URL}}ckeditor/ckeditor/ckeditor.js"></script>
+<script type="text/javascript" src="{{STATIC_URL}}js/bootstrap.file-input.js"></script>
+
+{% block css %}{% endblock %}
+
+{% block js %}{% endblock %}
+</head>
+
+<body>
+<div class="container-fluid">
+
+<nav class="navbar navbar-default" role="navigation">
+  <div class="container-fluid">
+    <!-- Brand and toggle get grouped for better mobile display -->
+    <div class="navbar-header">
+      <button type="button" class="navbar-toggle" data-toggle="collapse" data-target="#main-menu-collapse">
+        <span class="sr-only">Toggle navigation</span>
+        <span class="icon-bar"></span>
+        <span class="icon-bar"></span>
+        <span class="icon-bar"></span>
+      </button>
+      <span class="navbar-brand" href="/">open<b>todo</b></span>
+    </div>
+    <div id="main-menu-collapse" class="collapse navbar-collapse">
+      <ul class="nav navbar-nav">
+	{% block main-menu %}
+	{% endblock %}
+      </ul>
+      <div class="navbar-right">
+	<p class="navbar-text">{{user.get_full_name|default:user}} </p> 
+	<a href="{% url 'django.contrib.auth.views.logout_then_login' %}" class="btn btn-default navbar-btn">Выйти</a>
+      </div>
+    </div>
+  </div>
+</nav>
+
+      <div class="page-header">{% block page-header %}{% endblock %}</div>
+      {% block entire-content %}
+      <div class="row">
+        <div class="col-md-2">{% block left %}&nbsp;{% endblock %}</div>
+        <div class="col-md-10">{% block content %}&nbsp;{% endblock %}</div>
+      </div>
+      {% endblock %}
+</div>
+</body>
+</html>

@@ -1,0 +1,174 @@
+{% extends "todo.html" %}
+{% load todo_extras compress %}
+
+{% block title %}Задачи{% endblock %}
+
+{% block left %}
+<div class="panel panel-default">
+
+<div class="panel-heading">
+{{filter.form.project}}
+</div>
+
+<div class="panel-body">
+<ul class="nav nav-pills nav-stacked">
+	{% with assigned_to=filter.form.assigned_to.value author=filter.form.author.value user_pk=user.pk|slugify %}
+	<li {% if assigned_to|length = 1 and user_pk in assigned_to %} class="active"{% endif %}><a id="inboxButton" href="{% url 'task_list' %}">Входящие</a></li>
+	<li {% ifequal user_pk author %} class="active"{% endifequal %}><a id="outboxButton" href="{% url 'task_list' %}">Исходящие</a></li>
+	<li {% ifnotequal user_pk author %}{% if not assigned_to|length = 1 or not user_pk in assigned_to %} class="active"{% endif %}{% endifnotequal %}><a id="allButton" href="{% url 'task_list' %}">Все</a></li>
+	{% endwith %}
+
+</ul>
+
+</div>
+</div>
+
+{% endblock %}
+
+{% block page-header %}
+	<h1>Задачи</h1>
+{% endblock %}
+
+{% block js %}
+	<script type="text/javascript" src="{{STATIC_URL}}bootstrap-3.2.0/js/modal.js"></script>
+	{{ filter.form.media.js }}
+	<script>
+		$(
+		function() {
+			$("#id_assigned_to").chosen({width:'100%',no_results_text:"Ничего не найдено"});
+
+			$("#outboxButton").on('click',function(e){
+				form=$("#filterForm")
+				form.find("[name=assigned_to]").val("");
+				form.find("[name=author]").val("{{user.pk}}");
+				form.submit();
+				e.preventDefault();
+			});
+			$("#inboxButton").on('click',function(e){
+				form=$("#filterForm")
+				form.find("[name=author]").val("");
+				form.find("[name=assigned_to]").val("{{user.pk}}");
+				form.submit();
+				e.preventDefault();
+			});
+			$("#allButton").on('click',function(e){
+				form=$("#filterForm")
+				form.find("[name=author]").val("");
+				form.find("[name=assigned_to]").val("");
+				form.submit();
+				e.preventDefault();
+			});
+			$("#id_project").on('change',function(e){
+				$(this.form).submit();
+			});
+			$("#tasksTable th a").on('click',function(e){
+				order_by=this.href.split("?")[1].split("=")[1];	
+				form=$("#filterForm")
+				form.find("[name=o]").val(order_by);
+				form.submit();
+				e.preventDefault();
+			});
+		});
+	</script>
+{% endblock %}
+
+{% block css %}
+	{{ filter.form.media.css }}
+{% endblock %}
+
+{% block content %}
+
+{% with form=filter.form %}
+<div id="filterDialog" class="modal fade" role="dialog">
+  <form method="get" id="filterForm" action="{% url 'task_list' %}">
+  {{form.o}}
+  <div class="modal-dialog">
+    <div class="modal-content">
+	<div class="modal-header"><h3>Выберите параметры фильтра</h3></div>
+	<div class="modal-body">
+		<div class="row">
+			<div class="col-md-2">Автор:</div>
+			<div class="col-md-4">{{ form.author }}</div>
+			<div class="col-md-2">Ответственный:</div>
+			<div class="col-md-4">{{ form.assigned_to }}</div>
+		</div>
+		<div>&nbsp;</div>
+		<div class="row">
+			<div class="col-md-2">Статус задачи:</div>
+			<div class="col-md-4">{{ form.status }}</div>
+			<div class="col-md-2">Приоритет задачи:</div>
+			<div class="col-md-4">{{ form.priority }}</div>
+		</div>
+		<div>&nbsp;</div>
+		<div class="row">	
+			<div class="col-md-2">Теги:</div>
+			<div class="col-md-4">{{ form.tags }}</div>
+			<div class="col-md-2">Найти в названии:</div>
+			<div class="col-md-4">{{ form.title }}</div>
+		</div>
+		<div>&nbsp;</div>
+      		<div class="modal-footer">
+        		<button type="submit" class="btn btn-primary">Применить</button>
+			<a class="btn btn-default btn-danger" href="{% url 'task_list' %}">Сбросить</a>
+        		<button type="button" class="btn btn-warning" data-dismiss="modal">Закрыть</button>
+      		</div>
+      </div>
+    </div>
+  </div>
+  </form>
+</div>
+{% endwith %}
+
+<div class="panel panel-default">
+  <div class="panel-heading">
+		<h3>
+			<button class="btn btn-primary" data-toggle="modal" data-target="#filterDialog">Фильтр...</button>
+		</h3>
+  </div>
+  <div class="panel-body">
+  		{% include "todo/_pagination.html" %}
+		<div class="btn-group pull-right">
+  			<a href="{% url 'task_create' %}" class="btn btn-default">Добавить задачу</a>
+			{% if user.is_superuser %}<a class="btn btn-default" href="{# url tasks_pdf #}">PDF-версия</a>{% endif %}
+		</div>
+  </div>
+  {% if object_list|length %}
+  {% with order=filter.form.o.value %}
+  <div class="table-responsive">
+  <table id="tasksTable" class="table table-bordered table-condensed">
+	<tr>
+		{% include "todo/_task_list_th.html" with asc='title' desc='-title' title="Название" classes="left" %}
+		{% include "todo/_task_list_th.html" with asc='project' desc='-project' title="Проект" %}
+		{% include "todo/_task_list_th.html" with asc='author' desc='-author' title="Назначил" %}
+		{% include "todo/_task_list_th.html" with asc='created_at' desc='-created_at' title="Создана" %}
+		{% include "todo/_task_list_th.html" with asc='assigned_to' desc='-assigned_to' title="Выполняют" %}
+		{% include "todo/_task_list_th.html" with asc='deadline' desc='-deadline' title="Срок" %}
+		{% include "todo/_task_list_th.html" with asc='status' desc='-status' title="Статус" %}
+		{% include "todo/_task_list_th.html" with asc='priority' desc='-priority' title="Приоритет" %}
+	</tr>
+  {% for t in object_list %}
+	<tr class="status{{t.status}}">
+
+		<td class="left"><a href="{% url 'task_detail' t.id %}" class="todolist">{{t.title}}</a>&nbsp;{% if t.comments.count %}<a href="{% url 'task_detail' t.id %}#comments" class="comment">({{ t.comments.count }})</a>{% endif %}&nbsp;&nbsp;{% if t.files.count %}<a href="{% url 'task_detail' t.id %}#filesPanel"><span class="glyphicon glyphicon-file"></span>{% endif %}</td>
+		{% if not project %}<td><nobr>{{t.project.title}}</nobr></td>{% endif %}
+		<td><nobr>{{t.author.get_full_name|default:t.author}}</nobr></td>
+		<td style="text-align:right">{{t.created_at|date:"SHORT_DATE_FORMAT"}}</td>
+		<td>
+			{% for assigned_to in t.assigned_to.all %}
+				<nobr>{{assigned_to.get_full_name|default:assigned_to|default:"&nbsp;"}}</nobr><br/>
+			{% endfor %}
+		</td>
+		<td style="text-align:right">{{t.deadline|timeuntil}}</td>
+		<td class="center"><div class="status">{% ifequal t.status 4 %}завершена{% else %}{{t.get_status_display|lower}}{% endifequal %}</div></td>
+		<td class="center"><div class="priority priority{{t.priority.id}}">{{t.get_priority_display|lower}}</div></td>
+	</tr>
+  {% endfor %}
+  </table>
+  </div>
+  {% endwith %}
+  <div class="panel-body">{% include "todo/_pagination.html" %}</div>
+  {% else %}
+		<div class="alert alert-warning"><p class="text-center">Нет задач, соответствующих выбранным параметрам.</p></div>
+  </div>
+  {% endif %}
+{% endblock %}

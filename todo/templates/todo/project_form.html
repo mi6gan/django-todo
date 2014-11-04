@@ -1,0 +1,64 @@
+{% extends "todo.html" %}
+{% load todo_extras %}
+{% load static %}
+
+{% block css %}
+{{ form.media.css }}
+{% endblock %}
+
+{% block js %}
+{{ form.media.js }}
+<script>
+	$(
+	function() {
+		$("#id_users").chosen({width:'100%',no_results_text:"Ничего не найдено"});
+	});
+</script>
+{% endblock %}
+
+{% block entire-content %}
+<div class="container">
+
+<form method="post" id="editform">
+{% csrf_token %}
+{{ form.author }}
+<div class="panel panel-default">
+<div class="panel-heading">
+
+	{% if form.errors %}
+	{% block form-errors %}
+	<div class="alert alert-danger">
+		{% if form.title.errors %}Не введено название проекта<br/>{% endif %}
+		{% if form.info.errors %}Не введено описание проекта<br/>{% endif %}
+		{% if form.users.errors %}Не выбрано ни одного участника{% endif %}
+	</div>
+	{% endblock %}
+	{% endif %}
+
+	<div class="row">
+		{% block form-top-fields %}
+		<div class="col-md-offset-3 col-md-1"><label for="id_title">* Проект:</label></div>
+		<div class="col-md-5">{{form.title}}</div>
+		{% endblock %}
+	</div>
+</div>
+<div class="panel-body">
+	<div><label for="id_info">Описание:</label></div>
+	<div class="row">
+		<div class="col-md-9">{{form.info}}</div>
+		<div class="col-md-3">
+			{% block form-right-fields %}
+				<div><label for="id_users">Участники:</label></div>
+				{{form.users}}
+			{% endblock %}
+		</div>
+	</div>
+</div>
+<div class="panel-footer">
+	<input type="submit" value="Сохранить проект" class="btn btn-primary" />
+	<a class="btn btn-default" href="{% if not object %}{% url 'project_list' %}{% else %}{# url project_details project.id #}{% endif %}">отмена</a>
+</div>
+</div>
+</form>
+</div>
+{% endblock %}

@@ -1,0 +1,184 @@
+{% extends "todo.html" %}
+{% load todo_extras compress %}
+
+{% block title %}{{task}}{% endblock %}
+
+{% block page-header %}
+<h1 id="task-title">{{object.title}}</h1>
+{% endblock %}
+{% block js %}
+{% compress js %}
+<script>
+$(function(){
+	$("#commentForm").on("submit",function(e){
+		if(!CKEDITOR.instances.id_content.getData())
+		{
+			$(this).find(".alert").removeClass("hidden");
+			e.preventDefault(); 
+		}
+	});
+});
+</script>
+{% endcompress %}
+{% block task-js %}{% endblock %}
+{% endblock %}
+
+
+{% block left %}
+<ul class="list-group">
+
+<li class="list-group-item">
+<b>Проект:</b> <span><a href="{% url 'project_detail' object.project.id %}">{{object.project.title}}</a></span>
+</li>
+
+<li class="list-group-item">
+<b>Автор:</b> <span>{{object.author.get_full_name|default:object.author}}</span>
+</li>
+
+<li class="list-group-item">
+<b>Добавлена:</b> <span>{{object.created_at|date:"SHORT_DATE_FORMAT"}}</span>
+</li>
+
+<li class="list-group-item">
+<b>Ответственные:</b>
+{% for assigned_to in object.assigned_to.all %}
+<br/><span>{{assigned_to.get_full_name|default:assigned_to}}</span>
+{% empty %}
+<span>не назначен</span>
+{% endfor %}
+</li>
+
+<li class="list-group-item">
+<b>Приоритет:</b>
+<span>{{object.get_priority_display}}</span>
+</li>
+
+{% if object.deadline %}
+<li class="list-group-item">
+<b>Срок:</b>
+<span>{{object.deadline}}</span>
+</li>
+
+{% endif %}
+
+{% if object.author = user or user.is_superuser %}
+<li class="list-group-item text-center">
+		<div class="btn-group">
+			<a class="btn btn-default" href="{% url 'task_edit' task.id %}"><span class="glyphicon glyphicon-pencil"></span></a>
+			<a class="btn btn-default" href="{% url 'task_delete' task.id %}"><span class="glyphicon glyphicon-remove"></span></a>
+		</div>
+</li>
+{% endif %}
+</ul>
+{% endblock %}
+
+
+{% block content %}
+<div class="panel panel-default">
+<div class="panel-heading">
+	<h3>
+		<span class="label status status{{object.status}}">{% ifequal object.status 4 %}завершена{% else %}{{object.get_status_display|lower}}{% endifequal %}</span>
+		{% for tag in object.tags.all %}<span class="label label-info">{{tag}}</span> {% endfor %}
+	</h3>
+</div>
+<div class="panel-body">
+
+{% if object.info %}
+<div id="task-info">{{object.info|safe}}</div>
+{% else %}
+<div class="alert alert-warning">У задачи отсутствует описание</div>
+{% endif %}
+
+</div>
+<div class="panel-footer">
+<h3>
+<form method="POST" action="{% url 'task_status' object.id %}" />
+{% csrf_token %}
+{% ifequal object.status 1 %}
+	{% if user in object.assigned_to.all %}
+		<button type="submit" name="status" value="2" class="btn btn-primary pull-left">Принять</button>
+		<span class="pull-left">&nbsp;</span>
+	{% else %}&nbsp;{% endif %}
+{% endifequal %}
+{% ifequal object.status 2 %}
+	{% if user in object.assigned_to.all %}
+		<button type="submit" name="status" value="3" class="btn btn-primary pull-left">Завершить</button>
+		<span class="pull-left">&nbsp;</span>
+	{% else %}&nbsp;{% endif %}
+{% endifequal %}
+{% ifequal object.status 3 %}
+	{% ifequal object.author.id user.id %}
+		<button type="submit" name="status" value="4" class="btn btn-primary pull-left">Одобрить</button>
+		<span class="pull-left">&nbsp;</span>
+		<button type="submit" name="status" value="1" class="btn btn-primary pull-left">Открыть заново</button>
+		<span class="pull-left">&nbsp;</span>
+	{% else %}&nbsp;{% endifequal %}
+{% endifequal %}
+{% ifequal object.status 4 %}
+	{% ifequal object.author.id user.id %}
+		<button type="submit" name="status" value="1" class="btn btn-primary pull-left">Открыть заново</button>
+		<span class="pull-left">&nbsp;</span>
+	{% else %}&nbsp;{% endifequal %}
+{% endifequal %}
+</form>
+<a href="{% url 'task_list' %}" class="btn btn-default">Назад к списку задач</a>
+</h3>
+</div>
+
+
+</div>
+{% include "todo/_files_panel.html" with create_action="task_attach_create" delete_action="task_attach_delete" type="task" %}
+<ul id="commentContainer" class="list-group panel-default">
+	<li class="list-group-item panel-heading"><h3>Комментарии</h3></li>
+	{% for comment in object.comments.all %}
+	<li {% if forloop.last %}id="lastComment"{% endif %} class="list-group-item comment" id="id_comment_{{comment.id}}">	
+		<div class="panel panel-default">
+		<div class="panel-body" style="overflow:hidden;" id="id_message_{{comment.id}}">{{comment.content|safe}}</div>
+		<div class="panel-footer">
+		<h4 class="text-right comment-extra">
+			<span id="id_author_{{comment.id}}">{{comment.author.get_full_name|default:comment.author}}</span>,
+			<span id="id_dt_{{comment.id}}">{{comment.created_at|date:'DATE_FORMAT'}}</span>
+			{% if user.is_superuser or comment.author = user %}
+				&nbsp;&nbsp;<div class="pull-right">
+				<form method="post" action='{% url 'task_comment_delete' comment.id %}#commentContainer'>
+					{% csrf_token %}
+					<button class="close" type="submit"><span class="glyphicon glyphicon-remove"></span></button>
+				</form>
+				</div>
+			{% endif %}
+		</h4>
+		</div>
+		</div>
+	</li>
+	{% empty %}
+	<li class="list-group-item"><div class="alert alert-warning">Нет комментариев</div></li>
+	{% endfor %}
+{% with comment_form as form %}
+{% if form %}
+<li class="list-group-item">
+<form id="commentForm" action="{% url 'task_comment_create' %}#lastComment" method="POST">
+    <div class="alert alert-danger hidden">Введите комментарий</div>
+    {% csrf_token %}
+    {{ form.task }}
+    {{ form.content }}
+    <input class="btn btn-primary" type="submit" value="Добавить комментарий" class="button" />
+</form>
+</li>
+{% endif %}
+{% endwith %}
+</ul>
+<div id="confirmDialog" class="modal fade" role="dialog" aria-hidden="true">
+  <div class="modal-dialog modal-sm">
+    <div class="modal-content">
+      <form method="post" action="{% url 'task_delete' object.pk %}">
+	{% csrf_token %}
+      <div class="modal-body"><h4>Вы уверены, что хотите удалить задачу <b>{{object.title}}</b>?</h4></div>
+        <div class="modal-footer">
+        	<button type="submit" class="btn btn-danger">Да</button>
+        	<button type="button" class="btn btn-primary" data-dismiss="modal">Нет</button>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+{% endblock %}

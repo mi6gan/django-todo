@@ -1,0 +1,57 @@
+{% load todo_extras %}
+<div id="filesPanel" class="panel panel-default">
+<div class="panel-heading"><h3>Файлы</h3></div>
+<div class="panel-body">
+	{% for a in object.files.all %}
+	<div class="row">
+		<div class="col-md-12">
+			<div class="pull-left"><a href="{{ a.attached_file.url }}">{{a.attached_file|basename}}</a> ({{a.attached_file|size_kb}}) &#151; {{a.author.get_full_name|default:a.author}}, {{a.created_at|date:"SHORT_DATE_FORMAT"}}&nbsp;&nbsp;</div>
+			{% if user.is_superuser or object.author = user or user in object.assigned_to.all or user in object.users.all %}
+			<div class="pull-left">
+				<form method="post" action='{% url delete_action a.pk %}#filesPanel'>
+					{% csrf_token %}
+					<button class="close" title="удалить файл" type="submit"><span class="glyphicon glyphicon-remove"></span></button>
+				</form>
+			</div>
+			{% endif %}
+		</div>
+	</div>
+	{% empty %}
+		<div class="alert alert-warning">Не прикреплено ни одного файла</div>
+	{% endfor %}
+</div>
+{% if user.is_superuser or a.author = user or user in object.assigned_to.all %}
+<div class="panel-footer">
+	<div class="row">
+	<div class="col-md-12">
+	<form method="post" enctype="multipart/form-data" id="attach_form" action="{% url create_action %}#filesPanel">
+		{% csrf_token %}
+    		<div class="alert alert-danger hidden">Выберите файл</div>
+		<input type="hidden" name="{{type}}" value="{{object.pk}}" />
+		<input type="hidden" name="author" value="{{user.pk}}" />
+		<input type="file" name="attached_file" />
+		<input class="btn btn-primary" type="submit" value="Прикрепить" />
+		<script>
+			$( function() {
+					file_input=$('#attach_form input[type=file]');
+					file_input.attr('title',"Обзор...");
+					file_input.attr("data-filename-placement","inside");
+					file_input.bootstrapFileInput();
+					file_input.on("change",function(e){
+						if(file_input.val())
+							$("#attach_form").find('.alert').addClass("hidden");
+					});	
+					$('#attach_form').on("submit",function(e){
+						if(!file_input.val()) {
+							$(this).find('.alert').removeClass("hidden");
+							e.preventDefault();
+						}
+					});
+			 } );
+		</script>
+	</form>
+	</div>
+	</div>
+</div>
+{% endif %}
+</div>

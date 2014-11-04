@@ -1,0 +1,43 @@
+{% load todo_extras compress %}
+<html>
+<head>
+<title>Авторизация | opentodo</title>
+{% compress css %}
+	<link type="text/less" rel="stylesheet" href="{{STATIC_URL}}bootstrap-3.2.0/less/bootstrap.less" >
+	<link type="text/less" rel="stylesheet" href="{{STATIC_URL}}less/todo.less" >
+{% endcompress %}
+</head>
+<body> 
+<div class="container">
+<div class="modal show">
+  <div class="modal-dialog">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h2 class="modal-title"><span>open</span><b>todo</b></h2>
+      </div>
+      <form method="post" action="." id="id_loginform">
+	{% csrf_token %}
+      <div class="modal-body">
+	{% if form.non_field_errors %}
+	<div class="alert alert-danger">
+		{% for error in form.non_field_errors %}{{error}}<br/>{% endfor %}
+	</div>
+	{% endif %}
+	<div class="row">
+	<div class="col-md-offset-3 col-md-6">
+			<input type="text" class="form-control" placeholder="{{form.username.label}}" name="username" value="{{form.username.value|default_if_none:''}}" required />
+			<br/>
+			<input type="password" class="form-control" placeholder="{{form.password.label}}" name="password" value="{{form.password.value|default_if_none:''}}" required />
+	</div>
+	</div>
+      </div>
+      <div class="modal-footer">
+        <button type="submit" class="btn btn-lg btn-primary">Войти</button>
+      </div>
+	</form>
+    </div><!-- /.modal-content -->
+  </div><!-- /.modal-dialog -->
+</div><!-- /.modal -->
+</div>
+</body>
+</html>

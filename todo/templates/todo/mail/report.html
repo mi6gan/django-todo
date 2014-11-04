@@ -1,0 +1,5 @@
+{% load todo_extras %}<h3>{{r.title}}</h3>
+{{r.content|safe}}
+<b>{{r.author|username}}</b>, {{r.created_at|format_date}}<br /><br />
+
+<a href="http://{{host}}{% url report r.id %}">http://{{host}}{% url report r.id %}</a>

@@ -1,0 +1,22 @@
+{% extends "todo.html" %}
+
+{% block title %}Действия{% endblock %}
+
+{% block page-header %}<h1>Действия</h1>{% endblock %}
+
+{% block entire-content %}
+  <div class="container">
+  {% include "todo/_pagination.html" %}
+  <div class="table-responsive">
+  <table id="tasksTable" class="table table-bordered table-condensed">
+	{% for action in object_list %}
+		<tr>
+			<td><a href="{{action.content_object.get_absolute_url}}">{{ action.info }}</a></td>
+			<td class="text-center">{{ action.author.get_full_name|default:action.author}}, {{ action.created_at }}</td>
+		</tr>
+	{% endfor %}
+  </table>
+  </div>
+  {% include "todo/_pagination.html" %}
+  </div>
+{% endblock %}

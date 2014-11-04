@@ -1,0 +1,17 @@
+{% extends "base.html" %}
+{% block main-menu %}
+        <li {% ifequal view.menu_active 'tasks'%} class="active" {% endifequal %}>
+		<a href="{% url 'task_list' %}">Задачи</a>
+	</li>
+        <li {% ifequal view.menu_active 'projects'%} class="active" {% endifequal %}>
+		<a href="{% url 'project_list' %}">Проекты</a>
+	</li>
+	{% if user.is_superuser %}
+        <li {% ifequal view.menu_active 'actions' %} class="active" {% endifequal %}>
+		<a href="{% url 'action_list' %}">Действия</a>
+	</li>
+        <li>
+		<a href="/admin/" target="_blank">Администрирование</a>
+	</li>
+	{% endif %}
+{% endblock %}

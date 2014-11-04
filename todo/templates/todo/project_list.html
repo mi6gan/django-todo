@@ -1,0 +1,36 @@
+{% extends "todo.html" %}
+
+{% block title %}Проекты{% endblock %}
+{% block page-header %}<h1>Проекты</h1>{% endblock %}
+
+{% block left %}
+{% endblock %}
+
+{% block entire-content %}
+<div class="panel panel-default">
+{% block panel-heading %}
+{% if user.is_superuser or perms.todo.add_project %}
+<div class="panel-heading">
+<h3><a class="btn btn-lg btn-primary" href="{% url 'project_create' %}">добавить проект</a></h3>
+</div>
+{% endif %}
+{% endblock %}
+<div class="panel-body">
+{% if object_list|length %}
+<div class="container text-center" style="line-height:50px;">
+{% block project-list %}
+{% for p in object_list %}
+	{% with tasks_active_count=p.tasks_active_count %}
+	<a class="btn {% if tasks_active_count %}btn-danger{% else %}btn-success{% endif %} btn-lg" href="{% url 'project_detail' p.id %}">{{p.title}}{% if tasks_active_count %} <span class="badge">{{tasks_active_count}}</span>{% endif %}</a>
+	{% endwith %}
+{% endfor %}
+{% endblock %}
+</div>
+{% else %}
+<div class="alert alert-warning text-center">
+Тут пока пусто. Обратитесь к администратору с просьбой включить вас в команду какого-нибудь проекта.
+</div>
+{% endif %}
+</div>
+</div>
+{% endblock %}

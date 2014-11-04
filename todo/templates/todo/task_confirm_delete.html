@@ -1,0 +1,9 @@
+{% extends "todo/task_detail.html" %}
+{% block task-js %}
+	<script type="text/javascript" src="{{STATIC_URL}}bootstrap-3.2.0/js/modal.js"></script>
+	<script>
+	$(function(){
+		$("#confirmDialog").modal("show");
+	});
+	</script>
+{% endblock %}

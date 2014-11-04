@@ -1,0 +1,10 @@
+{% load todo_extras %}<b>{{task.title}}</b><br /><br />
+{% if task.info %}{{task.info|safe}}{% endif %}<br /><br />
+
+Проект: {{task.project.title }}<br />
+Автор: {{ task.author.full_name|default:task.author }}<br />
+Дата: {{task.created_at|date:"d.m.Y"}}<br />
+Ответственные: {% for assigned_to in object.assigned_to.all %}{% if not foorloop.first %} ,{% endif %}{{assigned_to.get_full_name|default:assigned_to}}{% endfor %}
+{% if task.deadline %}Срок: {{ task.deadline|date:"d.m.Y" }}<br />{% else %}<br />{% endif %}
+
+<a href="http://{{host}}{% url 'task_detail' task.id %}">http://{{host}}{% url 'task_detail' task.id %}</a>

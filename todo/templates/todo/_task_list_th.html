@@ -1,0 +1,5 @@
+		<th class="{{classes}}{% if order = asc or order = desc %} active{% endif %}">
+			<a href="{% url 'task_list' %}?o={% if order = asc %}{{desc}}{% else %}{{asc}}{% endif %}">
+				{{title}}{% if order = desc %}&uarr;{% elif order = asc %}&darr;{% endif%}
+			</a>
+		</th>

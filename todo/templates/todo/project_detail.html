@@ -1,0 +1,70 @@
+{% extends "todo.html" %}
+{% load todo_extras %}
+
+{% block title %}{{object}}{% endblock %}
+
+{% block left %}
+<ul class="list-group">
+
+<li class="list-group-item">
+<b>Автор</b><br />
+<span>{{object.author.get_full_name|default:object.author}}</span>
+</li>
+
+<li class="list-group-item">
+<b>Дата создания</b><br />
+<span>{{object.created_at|date:"SHORT_DATE_FORMAT"}}</span>
+</li>
+{% if object.author = user or user.is_superuser %}
+<li class="list-group-item text-center">
+	<div class="btn-group">
+	{% block action-buttons %}
+		<a class="btn btn-default" href="{% url 'project_edit' object.id %}"><span class="glyphicon glyphicon-pencil"></span></a>
+		<a class="btn btn-default" href="{% url 'project_delete' object.id %}"><span class="glyphicon glyphicon-remove"></span></a>
+	{% endblock %}
+	</div>
+</li>
+{% endif %}
+</ul>
+{% endblock %}
+{% block page-header %} 
+	<h1>{{object.title}}</h1>
+{% endblock %}
+
+{% block content %}
+<div class="panel panel-default" id="task-container">
+{% if object.info %}
+<div class="panel-heading" id="task-action">
+<h4>{% for member in object.users.all|dictsort:'username' %}<span class="label label-info">{{member.get_full_name|default:member}}</span> {% endfor %}</h4>
+</div>
+<div class="panel-body" id="task-info">{{object.info|safe}}
+</div>
+{% endif %}
+
+{% block panel-footer %}
+<div class="panel-footer" id="task-action">
+<a class="btn btn-primary" href="{% url 'task_list' %}?project={{object.id}}">Задачи проекта <span class="badge">{{object.tasks_count}}{%if object.tasks_active_count%}, <i>{{object.tasks_active_count}}</i>{% endif %}</span></a>
+<a class="btn btn-default" href="{% url 'project_list' %}">Назад к списку проектов</a>
+</div>
+{% endblock %}
+
+</div>
+{% block project-content %}
+{% include "todo/_files_panel.html" with create_action="project_attach_create" delete_action="project_attach_delete" type="project" %}
+<div id="confirmDialog" class="modal fade" role="dialog" aria-hidden="true">
+  <div class="modal-dialog modal-sm">
+    <div class="modal-content">
+      <form method="post" action="{% url 'project_delete' object.pk %}">
+      {% csrf_token %}
+      <div class="modal-body"><h4>Вы уверены, что хотите удалить проект <b>{{object.title}}</b>?</h4></div>
+        <div class="modal-footer">
+        	<button type="submit" class="btn btn-danger">Да</button>
+        	<button type="button" class="btn btn-primary" data-dismiss="modal">Нет</button>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+{% endblock %}
+
+{% endblock %}
